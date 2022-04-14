@@ -15,10 +15,12 @@ import (
 	"time"
 
 	"github.com/future-architect/vuls/config"
+	"github.com/future-architect/vuls/cti"
 	"github.com/future-architect/vuls/logging"
 	"github.com/future-architect/vuls/models"
 	"github.com/gosuri/uitable"
 	"github.com/olekukonko/tablewriter"
+	"golang.org/x/exp/slices"
 	"golang.org/x/xerrors"
 )
 
@@ -494,6 +496,22 @@ No CVE-IDs are found in updatable packages.
 
 		for _, alert := range vuln.AlertDict.USCERT {
 			data = append(data, []string{"US-CERT Alert", alert.URL})
+		}
+
+		attacks := []string{}
+		for _, techniqueID := range vuln.Ctis {
+			if strings.HasPrefix(techniqueID, "CAPEC-") {
+				continue
+			}
+			technique, ok := cti.TechniqueDict[techniqueID]
+			if !ok {
+				continue
+			}
+			attacks = append(attacks, technique.Name)
+		}
+		slices.Sort(attacks)
+		for _, attack := range attacks {
+			data = append(data, []string{"MITER ATT&CK", attack})
 		}
 
 		// for _, rr := range vuln.CveContents.References(r.Family) {
